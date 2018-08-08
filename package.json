@@ -15,7 +15,6 @@
   "author": "David Sciamma <dsciamma@sierrawireless.com>",
   "license": "MIT",
   "dependencies": {
-    "bluebird": "^2.9.34",
     "got": "^7.1.0",
     "cookie": "^0.3.0",
     "lodash": "^4.17.4",

@@ -1,4 +1,3 @@
-const BPromise = require('bluebird');
 const got = require('got');
 const _ = require('lodash');
 
@@ -117,7 +116,7 @@ Zuora.prototype.authenticate = function authenticate() {
         return { Authorization: `Bearer ${this.access_token}` };
       });
     }
-    return BPromise.resolve({ Authorization: `Bearer ${this.access_token}` });
+    return Promise.resolve({ Authorization: `Bearer ${this.access_token}` });
   };
 
   const oauthCookie = () => {
@@ -137,7 +136,7 @@ Zuora.prototype.authenticate = function authenticate() {
         return { cookie: this.authCookie };
       });
     }
-    return BPromise.resolve({ cookie: this.authCookie });
+    return Promise.resolve({ cookie: this.authCookie });
   };
 
   if (this.oauthType === 'oauth_v2') {
@@ -146,27 +145,30 @@ Zuora.prototype.authenticate = function authenticate() {
   return oauthCookie();
 };
 
-Zuora.prototype.getObject = function getObject(path) {
-  return this.authenticate().then((headers) => {
-    const url = this.getApiUrlWithPath(path);
-    const query = {
-      headers,
-      json: true,
-    };
-    return got.get(url, query).then((res) => res.body);
-  });
+Zuora.prototype.getObject = async function getObject(path) {
+  const headers = await this.authenticate();
+  const url = this.getApiUrlWithPath(path);
+  const query = {
+    headers,
+    json: true,
+  };
+  const res = await got.get(url, query);
+  return res.body;
 };
 
-Zuora.prototype.queryFirst = function queryFirst(queryString) {
-  return this.action.query(queryString).then((queryResult) => (queryResult.size > 0 ? queryResult.records[0] : null));
+Zuora.prototype.queryFirst = async function queryFirst(queryString) {
+  const queryResult = await this.action.query(queryString);
+  return queryResult.size > 0 ? queryResult.records[0] : null;
 };
 
-Zuora.prototype.queryFull = function queryFull(queryString) {
-  const fullQueryMore = (queryLocator) => this.action
-    .queryMore(queryLocator)
-    .then((result) => (result.done ? result.records : fullQueryMore(result.queryLocator).then((more) => _.concat(result.records, more))));
+Zuora.prototype.queryFull = async function queryFull(queryString) {
+  const fullQueryMore = async (queryLocator) => {
+    const result = await this.action.queryMore(queryLocator);
 
-  return this.action
-    .query(queryString)
-    .then((result) => (result.done ? result.records : fullQueryMore(result.queryLocator).then((more) => _.concat(result.records, more))));
+    return result.done ? result.records : fullQueryMore(result.queryLocator).then((more) => _.concat(result.records, more));
+  };
+
+  const result = await this.action.query(queryString);
+
+  return result.done ? result.records : fullQueryMore(result.queryLocator).then((more) => _.concat(result.records, more));
 };
