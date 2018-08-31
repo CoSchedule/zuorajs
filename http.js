@@ -1,6 +1,13 @@
 const request = require('request-promise');
 const requestBase = require('request');
 
+class ZuoraClientError extends Error {
+  constructor(message, requestOptions) {
+    super(message);
+    this.requestOptions = requestOptions;
+  }
+}
+
 module.exports = (zuoraClient) => {
   const baseUrl = `${zuoraClient.config.apiUrl}/${zuoraClient.config.apiVersion}/`;
 
@@ -24,9 +31,9 @@ module.exports = (zuoraClient) => {
     const response = await request(options);
 
     if (response.success === false) {
-      const allErrorStrings = response.reasons.map((reason) => `Code: ${reason.code}: ${reason.message}`).join('\n');
+      const allErrorStrings = response.reasons.map((reason) => `Code: ${reason.code}: ${reason.message}`).join(' - ');
 
-      throw new Error(`${allErrorStrings}\nRequest options: ${JSON.stringify(options, null, 2)}`);
+      throw new ZuoraClientError(allErrorStrings, options);
     }
 
     return response;
