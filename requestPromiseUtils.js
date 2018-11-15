@@ -1,13 +1,13 @@
 const requestPromise = require('request-promise');
 const requestPromiseErrors = require('request-promise/errors');
 
-const requestWithRetries = async (requestOptions, retryHandler, computeRetryDelay) => {
+const requestWithRetries = async (requestOptions, shouldRetry, computeRetryDelay) => {
   const makeRequest = async (tryCount) => {
     let response;
     try {
       response = await requestPromise(requestOptions);
     } catch (err) {
-      if (!retryHandler || !retryHandler(err, tryCount)) {
+      if (!shouldRetry || !shouldRetry(err, tryCount)) {
         throw err;
       }
 
