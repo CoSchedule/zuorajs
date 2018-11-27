@@ -1,4 +1,14 @@
-const request = require('request-promise');
+const { requestWithRetries, isRequestError, isStatusCodeError } = require('./requestPromiseUtils');
+
+const shouldRetry = (err, nextTryCount) => {
+  if (nextTryCount > 5) {
+    return false;
+  }
+
+  return isRequestError(err) || (isStatusCodeError(err) && (err.statusCode === 403));
+};
+
+const computeRetryDelay = (err, nextTryCount) => (Math.round(Math.random() * 100) + (nextTryCount * 750));
 
 module.exports = (zuoraClient) => {
   let accessToken;
@@ -22,7 +32,10 @@ module.exports = (zuoraClient) => {
       json: true,
     };
 
-    const response = await request(options);
+    const response = await requestWithRetries(options, shouldRetry, computeRetryDelay);
+    if (!response) {
+      throw new Error('ZuoraJS: Auth: Empty Response');
+    }
 
     accessToken = response.access_token;
     renewalTime = Date.now() + ((response.expires_in * 1000) - 60000);
