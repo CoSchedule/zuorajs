@@ -1,6 +1,6 @@
 {
   "name": "zuorajs",
-  "version": "0.0.1",
+  "version": "1.3.0",
   "description": "Zuora REST API client for nodejs",
   "main": "zuora.js",
   "scripts": {
