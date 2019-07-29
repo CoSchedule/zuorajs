@@ -5,7 +5,7 @@ const shouldRetry = (err, nextTryCount) => {
     return false;
   }
 
-  return isRequestError(err) || (isStatusCodeError(err) && (err.statusCode === 403));
+  return isRequestError(err) || (isStatusCodeError(err) && (err.statusCode === 403 || err.statusCode === 401));
 };
 
 const computeRetryDelay = (err, nextTryCount) => (Math.round(Math.random() * 100) + (nextTryCount * 750));
